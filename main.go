@@ -1,0 +1,39 @@
+package main
+
+import (
+	"log"
+	"os"
+
+	hass "github.com/exceptionfault/hass-golang-ws/client"
+)
+
+func main() {
+	api_token := os.Getenv("HASS_API_TOKEN")
+	host := os.Getenv("HASS_URL")
+
+	client := hass.CreateHassClient(host, api_token)
+	err := client.Connect()
+	if err != nil {
+		panic(err)
+	}
+	defer client.Disconnect()
+
+	client.SubscribeEvent(hass.EVT_STATE_CHANGED, func(evt hass.Event) {
+
+		if evt.IsStateChangedEvent() {
+			svt, err := evt.GetStateChangedEvent()
+			if err != nil {
+				log.Printf("Got error: %v", err)
+				return
+			}
+			log.Printf("Entity %s changed from %s to %s", svt.EntityId, svt.OldState.State, svt.NewState.State)
+			return
+		}
+
+		log.Printf("Got Event %s at %s: %v", evt.EventType, evt.TimeFired, evt.Data)
+	})
+
+	interrupt := make(chan os.Signal, 1)
+	sig := <-interrupt
+	log.Println(sig)
+}
