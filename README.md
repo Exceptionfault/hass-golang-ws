@@ -53,6 +53,37 @@ client.SubscribeEvent(hass.EVT_STATE_CHANGED,
 )
 ```
 
+### Get a list of all Services
+
+You can get a list of all Services. The example below prints all services by domain and technical name, including all parameters of the Service.
+
+```go
+client.GetServices(func(services []*hass.Service, err error) {
+    if err != nil {
+        panic(err)
+    }
+    for _, s := range services {
+        fmt.Println(s.Domain, s.Id)
+        for name, field := range s.Fields {
+            fmt.Printf("    %s: %s\n", name, field.Description)
+        }
+    }
+})
+
+// Example Output:
+// light turn_off
+//     transition: Duration it takes to get to next state.
+//     flash: If the light should flash.
+// light toggle
+//     transition: Duration it takes to get to next state.
+//     rgb_color: Color for the light in RGB-format.
+//     color_name: A human readable color name.
+//     effect: Light effect.
+//     xy_color: Color for the light in XY-format.
+//     color_temp: Color temperature for the light in mireds.
+//     brightness: Number indicating brightness, where 0 turns ...
+```
+
 
 ## Running the sample
 

@@ -6,6 +6,18 @@ import (
 	"net/url"
 
 	"github.com/gorilla/websocket"
+	"github.com/mitchellh/mapstructure"
+)
+
+type resultType int
+
+type resultCacheEntry struct {
+	resultType resultType
+	callback   interface{}
+}
+
+const (
+	GetServicesResult resultType = iota
 )
 
 type HassClient struct {
@@ -16,6 +28,7 @@ type HassClient struct {
 	id            *idGen // go-routine safe id generation for commands
 
 	eventSubscriptions map[uint]func(Event)
+	resultCache        map[uint]resultCacheEntry
 }
 
 // Create a new client with the given target address and authentication token. Use `client.connect()` afterwards to establish a connection.
@@ -25,6 +38,7 @@ func CreateHassClient(address string, token string) *HassClient {
 		token:              token,
 		id:                 &idGen{},
 		eventSubscriptions: make(map[uint]func(Event)),
+		resultCache:        make(map[uint]resultCacheEntry),
 	}
 }
 
@@ -75,6 +89,22 @@ func (client *HassClient) listen() {
 				callback(msg.Event)
 				continue
 			}
+		}
+
+		if msg.MessageType == string(msg_RESULT) {
+			cache, found := client.resultCache[msg.Id]
+			if !found {
+				fmt.Printf("ERROR: Got result message for unknown id: %d", msg.Id)
+				continue
+			}
+			if cache.resultType == GetServicesResult {
+				if callback, ok := cache.callback.(func([]*Service, error)); ok {
+					callback(client.parseGetServiceResult(msg.Result))
+				}
+			}
+			// cleanup cache
+			delete(client.resultCache, msg.Id)
+			continue
 		}
 
 		log.Printf("recv: %v\n", msg)
@@ -133,6 +163,49 @@ func (client *HassClient) SubscribeEvent(eventType EventType, callback func(Even
 		log.Printf("error creating subscription: %v", err)
 	}
 	log.Printf("created subscription for event type %s with id %d", eventType, msg.Id)
+}
+
+func (client *HassClient) GetServices(callback func([]*Service, error)) error {
+	msg := client.createTypedIdMessage(msg_GET_SERVICES)
+	client.resultCache[msg.Id] = resultCacheEntry{resultType: GetServicesResult, callback: callback}
+	if err := client.send(msg); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (client *HassClient) parseGetServiceResult(data map[string]interface{}) ([]*Service, error) {
+	var services []*Service = make([]*Service, 0)
+
+	// loop over domains
+	for domainname, domaindata := range data {
+
+		// loop over services inside domains
+		for svcname, svcdata := range domaindata.(map[string]interface{}) {
+
+			// create service object
+			s := &Service{Domain: domainname, Id: svcname}
+
+			// parse svcdata for all attributes
+			decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{IgnoreUntaggedFields: true, TagName: "json", Result: &s})
+			if err != nil {
+				return nil, err
+			}
+			if err := decoder.Decode(svcdata); err != nil {
+				return nil, err
+			}
+			services = append(services, s)
+		}
+
+	}
+	return services, nil
+}
+
+func (client *HassClient) createTypedIdMessage(messageType messageType) *typedIdMessage {
+	return &typedIdMessage{
+		Id:          client.id.inc(),
+		MessageType: string(messageType),
+	}
 }
 
 func (client *HassClient) createSubscriveEventMessage(eventType EventType) *subscribeEventMessage {

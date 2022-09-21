@@ -21,6 +21,21 @@ type Event struct {
 	Context   Context                `json:"context"`
 }
 
+type Service struct {
+	Domain      string
+	Name        string `json:"name"`
+	Id          string
+	Description string `json:"description"`
+	Fields      map[string]Field
+}
+
+type Field struct {
+	Description string                 `json:"description"`
+	Example     interface{}            `json:"example"`
+	Required    bool                   `json:"required"`
+	Selecttor   map[string]interface{} `json:"selector"`
+}
+
 /* Returns true, if the event is of type `state_changed` In  this case you can safely get the parsed event via
 ```
 if event.IsStateChangedEvent() {
