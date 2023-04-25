@@ -2,17 +2,15 @@
 
 This library can be used to commiunicate with [Homeassistant](https://homeassistant.io) via websocket API to send and receive events.
 
-__:warning: This client is in a very early stage of development. The API will change!__
+**:warning: This client is in a very early stage of development. The API will change!**
 
-__:warning: This client does not yet support all features of the websocket API nor is it fully tested!__
-
+**:warning: This client does not yet support all features of the websocket API nor is it fully tested!**
 
 ## Installation
 
 ```go
 go get github.com/exceptionfault/hass-golang-ws
 ```
-
 
 ## Usage
 
@@ -26,8 +24,9 @@ import (
 func main() {
     host := "homeassistant.local:8123"
     api_token := "DHJ)DFIK...." // get a long-living token from the UI
+    scheme := "" // optional, can be "ws" or "wss". Default is "ws" if none or empty string given
 
-    client := hass.CreateHassClient(host, api_token)
+    client := hass.CreateHassClient(host, api_token, scheme)
     err := client.Connect()
     if err != nil {
         panic(err)
@@ -45,7 +44,7 @@ which get's called on every received event.
 To specify a filter which events you are looking for, you can use predefined constants like `hass.EVT_STATE_CHANGED`.
 
 ```go
-client.SubscribeEvent(hass.EVT_STATE_CHANGED, 
+client.SubscribeEvent(hass.EVT_STATE_CHANGED,
     // This function get's called on every event
     func(evt hass.Event) {
 		log.Printf("Got Event %s at %s: %v", evt.EventType, evt.TimeFired, evt.Data)
@@ -84,14 +83,15 @@ client.GetServices(func(services []*hass.Service, err error) {
 //     brightness: Number indicating brightness, where 0 turns ...
 ```
 
-
 ## Running the sample
 
 The `main.go` contains an example how to connect and do certain actions with the client.
 To run the samples make sure to set the following environment variables:
+
 ```
 export HASS_API_TOKEN=<your-long-living-token>
 export HASS_URL=<address-of-homeassistant:8123>
+export HASS_SCHEME=
 ```
 
 Then run `go run main.go`

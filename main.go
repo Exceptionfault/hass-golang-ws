@@ -11,8 +11,9 @@ import (
 func main() {
 	api_token := os.Getenv("HASS_API_TOKEN")
 	host := os.Getenv("HASS_URL")
+	scheme := os.Getenv("HASS_SCHEME")
 
-	client := hass.CreateHassClient(host, api_token)
+	client := hass.CreateHassClient(host, api_token, scheme)
 	err := client.Connect()
 	if err != nil {
 		panic(err)
