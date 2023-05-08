@@ -18,7 +18,7 @@ Create a client instance and connect:
 
 ```go
 import (
-    hass "github.com/exceptionfault/hass-golang-ws/client"
+    hass "github.com/bemble/hass-golang-ws/client"
 )
 
 func main() {
