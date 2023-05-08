@@ -9,7 +9,7 @@ This library can be used to commiunicate with [Homeassistant](https://homeassist
 ## Installation
 
 ```go
-go get github.com/exceptionfault/hass-golang-ws
+go get github.com/bemble/hass-golang-ws
 ```
 
 ## Usage
