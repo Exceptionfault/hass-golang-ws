@@ -12,7 +12,7 @@ func main() {
 	api_token := os.Getenv("HASS_API_TOKEN")
 	host := os.Getenv("HASS_URL")
 
-	client := hass.CreateHassClient(host, api_token)
+	client := hass.CreateHassClient(host, api_token).WithEncryption(false)
 	err := client.Connect()
 	if err != nil {
 		panic(err)

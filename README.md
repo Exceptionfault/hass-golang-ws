@@ -2,9 +2,9 @@
 
 This library can be used to commiunicate with [Homeassistant](https://homeassistant.io) via websocket API to send and receive events.
 
-__:warning: This client is in a very early stage of development. The API will change!__
+**:warning: This client is in a very early stage of development. The API will change!**
 
-__:warning: This client does not yet support all features of the websocket API nor is it fully tested!__
+**:warning: This client does not yet support all features of the websocket API nor is it fully tested!**
 
 
 ## Installation
@@ -35,6 +35,16 @@ func main() {
     defer client.Disconnect()
 }
 ```
+
+### Secure Websocket
+
+To use a secure connection to Homeassistant over TLS ( `wss://` scheme ), you can use the builder method on 
+the client **before** establishing a connection:
+
+```golang
+client := hass.CreateHassClient(host, api_token).WithEncryption(true)
+```
+
 
 ### Subscribe to Events with Callback
 

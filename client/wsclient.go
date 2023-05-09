@@ -23,6 +23,7 @@ const (
 type HassClient struct {
 	authenticated bool
 	address       string
+	scheme        string
 	token         string
 	connection    *websocket.Conn
 	id            *idGen // go-routine safe id generation for commands
@@ -35,11 +36,26 @@ type HassClient struct {
 func CreateHassClient(address string, token string) *HassClient {
 	return &HassClient{
 		address:            address,
+		scheme:             "ws",
 		token:              token,
 		id:                 &idGen{},
 		eventSubscriptions: make(map[uint]func(Event)),
 		resultCache:        make(map[uint]resultCacheEntry),
 	}
+}
+
+// Use the builder method to set scheme to "wss" and use an encrypted method
+func (client *HassClient) WithEncryption(enableWss bool) *HassClient {
+	if client.authenticated {
+		panic("Encryption must be set before connecting to HomeAssistant")
+	}
+
+	if enableWss {
+		client.scheme = "wss"
+	} else {
+		client.scheme = "ws"
+	}
+	return client
 }
 
 // Connects to the homeassistant instance and initiates authentication via token.
@@ -50,8 +66,7 @@ func (client *HassClient) Connect() error {
 		return fmt.Errorf("already connected")
 	}
 
-	// TODO: add support for wss (secure websocket connections)
-	u := url.URL{Scheme: "ws", Host: client.address, Path: API_ENDPOINT}
+	u := url.URL{Scheme: client.scheme, Host: client.address, Path: API_ENDPOINT}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return err
