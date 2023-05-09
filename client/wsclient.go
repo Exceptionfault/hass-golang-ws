@@ -18,6 +18,7 @@ type resultCacheEntry struct {
 
 const (
 	GetServicesResult resultType = iota
+	CallServiceResult
 )
 
 type HassClient struct {
@@ -115,6 +116,11 @@ func (client *HassClient) listen() {
 			if cache.resultType == GetServicesResult {
 				if callback, ok := cache.callback.(func([]*Service, error)); ok {
 					callback(client.parseGetServiceResult(msg.Result))
+				}
+			}
+			if cache.resultType == CallServiceResult {
+				if callback, ok := cache.callback.(func(ServerResult)); ok {
+					callback(msg.ServerResult)
 				}
 			}
 			// cleanup cache
@@ -231,4 +237,18 @@ func (client *HassClient) createSubscriveEventMessage(eventType EventType) *subs
 			MessageType: string(msg_SUBSCRIBE_EVENT),
 		},
 	}
+}
+
+/**
+ */
+func (client *HassClient) CallService(domain string, service string, params *map[string]string, callback func(ServerResult)) error {
+	msg := callServiceMessage{
+		typedIdMessage: *client.createTypedIdMessage(msg_CALL_SERVICE),
+		Domain:         domain,
+		Service:        service,
+		ServiceData:    params,
+	}
+
+	client.resultCache[msg.Id] = resultCacheEntry{CallServiceResult, callback}
+	return client.send(msg)
 }

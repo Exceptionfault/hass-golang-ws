@@ -21,6 +21,7 @@ const (
 
 	msg_SUBSCRIBE_EVENT messageType = "subscribe_events"
 	msg_GET_SERVICES    messageType = "get_services"
+	msg_CALL_SERVICE    messageType = "call_service"
 )
 
 const (

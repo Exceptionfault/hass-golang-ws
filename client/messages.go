@@ -22,12 +22,23 @@ type typedIdMessage struct {
 
 type serverMessage struct {
 	typedIdMessage
-	Success bool                   `json:"success"`
-	Result  map[string]interface{} `json:"result"`
-	Event   Event                  `json:"event"`
+	ServerResult
+	Event Event `json:"event"`
 }
 
 type subscribeEventMessage struct {
 	typedIdMessage
 	EventType string `json:"event_type"`
+}
+
+type entityTarget struct {
+	EntityId string `json:"entity_id,omitempty"`
+}
+
+type callServiceMessage struct {
+	typedIdMessage
+	Domain      string             `json:"domain"`
+	Service     string             `json:"service"`
+	ServiceData *map[string]string `json:"service_data,omitempty"`
+	Target      *entityTarget      `json:"target,omitempty"`
 }

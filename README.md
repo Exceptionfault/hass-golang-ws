@@ -16,7 +16,9 @@ go get github.com/exceptionfault/hass-golang-ws
 
 ## Usage
 
-Create a client instance and connect:
+### Connect to Homeassistant
+
+Create a client instance and connect with a long-living token:
 
 ```go
 import (
@@ -36,7 +38,7 @@ func main() {
 }
 ```
 
-### Secure Websocket
+#### Secure Websocket
 
 To use a secure connection to Homeassistant over TLS ( `wss://` scheme ), you can use the builder method on 
 the client **before** establishing a connection:
@@ -62,6 +64,7 @@ client.SubscribeEvent(hass.EVT_STATE_CHANGED,
     }
 )
 ```
+
 
 ### Get a list of all Services
 
@@ -92,6 +95,25 @@ client.GetServices(func(services []*hass.Service, err error) {
 //     xy_color: Color for the light in XY-format.
 //     color_temp: Color temperature for the light in mireds.
 //     brightness: Number indicating brightness, where 0 turns ...
+```
+
+
+### Call a service
+
+You can call a Service including parameters. The example below should create a new logbook entry in your HA instance, 
+but of course you could use this to restart your HA server, turn on the media player or tell your vacuum robot to start cleaning the house.
+When calling `CallService`, keep in mind that services in Homeassistant are named like `<domain>.<service>`. That means you
+have to split the name into those two parameters
+
+```go
+params := &map[string]string{
+    "name":    "hass-golang-ws",
+    "message": "sent this log",
+    "domain":  "text",
+}
+client.CallService("logbook", "log", params, func(sr hass.ServerResult) {
+    fmt.Println("Result of calling service logbook.log:", sr)
+})
 ```
 
 

@@ -19,6 +19,8 @@ func main() {
 	}
 	defer client.Disconnect()
 
+	// -----------------------------------------------------------------------------------
+	// Get a list of services
 	client.GetServices(func(services []*hass.Service, err error) {
 		if err != nil {
 			panic(err)
@@ -31,8 +33,24 @@ func main() {
 		}
 	})
 
-	// client.SubscribeEvent(hass.EVT_STATE_CHANGED, func(evt hass.Event) {
+	// -----------------------------------------------------------------------------------
+	// Call a service with parameters
+	params := &map[string]string{
+		"name":    "hass-golang-ws",
+		"message": "sent this log",
+		"domain":  "text",
+	}
+	err = client.CallService("logbook", "log", params, func(sr hass.ServerResult) {
+		fmt.Println("Result of calling service logbook.log:", sr)
+	})
+	if err != nil {
+		fmt.Println("Error occured during call of service logbook.log:", err)
+	}
+	fmt.Println("Called service logbook.log")
 
+	// -----------------------------------------------------------------------------------
+	// Subscribe to events
+	// client.SubscribeEvent(hass.EVT_STATE_CHANGED, func(evt hass.Event) {
 	// 	if evt.IsStateChangedEvent() {
 	// 		svt, err := evt.GetStateChangedEvent()
 	// 		if err != nil {
@@ -42,7 +60,6 @@ func main() {
 	// 		log.Printf("Entity %s changed from %s to %s", svt.EntityId, svt.OldState.State, svt.NewState.State)
 	// 		return
 	// 	}
-
 	// 	log.Printf("Got Event %s at %s: %v", evt.EventType, evt.TimeFired, evt.Data)
 	// })
 

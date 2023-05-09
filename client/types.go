@@ -21,6 +21,11 @@ type Event struct {
 	Context   Context                `json:"context"`
 }
 
+type ServerResult struct {
+	Success bool                   `json:"success"`
+	Result  map[string]interface{} `json:"result"`
+}
+
 type Service struct {
 	Domain      string
 	Name        string `json:"name"`
